@@ -1,10 +1,12 @@
+/* We took a reference implementation from: https://github.com/chriso/trie.c/ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 
 #include "trie.h"
 
-unsigned int index = 0;
+unsigned int global_index = 0;
 
 inline trie_t *trie_init(void) {
     trie_t *t = (trie_t *) malloc(sizeof(trie_t));
@@ -24,8 +26,8 @@ void trie_add(trie_t *t, char *word) {
         t = t->chars[c];
     }
     t->node = 1;
-    t->index = index;
-    index++;
+    t->index = global_index;
+    global_index++;
     t->chars[TRIE_SENTINEL] = trie_init();
 }
 
@@ -86,8 +88,8 @@ int trie_load(trie_t *t, char *file) {
     while ((c = getc(stream)) != EOF) {
         if (c == '\n' || c == '\r') {
             if (word_len > 0) {
-                t->index = index;
-                index++;
+                t->index = global_index;
+                global_index++;
                 t->chars[TRIE_SENTINEL] = trie_init();
                 words++;
                 word_len = 0;
@@ -106,8 +108,8 @@ int trie_load(trie_t *t, char *file) {
         }
     }
     if (t != root && word_len > 0) {
-        t->index = index;
-        index++;
+        t->index = global_index;
+        global_index++;
         t->chars[TRIE_SENTINEL] = trie_init();
     }
     return words;
@@ -147,7 +149,8 @@ void trie_strip(trie_t *t, char *src, char *dest) {
 }
 
 void trie_free(trie_t *t) {
-    for (int i = 0; i < TRIE_SIZE; i++) {
+    int i;
+    for (i = 0; i < TRIE_SIZE; i++) {
         if (t->chars[i] != NULL) {
             trie_free(t->chars[i]);
         }
