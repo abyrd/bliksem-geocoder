@@ -31,13 +31,18 @@ static void old_attr(void){
 
 
 // main function
-int main( void ){
+int main(int argc, char *argv[]){
   char ch;
   static char init;
   struct termios new_kbd_mode;
 
-  if(init)
-    return;
+  if (argc != 2) {
+    fprintf(stderr, "%s << stops-file >>\n", argv[0]);
+    return -1;
+  }
+
+  if (init)
+    return -1;
   // put keyboard (stdin, actually) in raw, unbuffered mode
   tcgetattr(0, &g_old_kbd_mode);
   memcpy(&new_kbd_mode, &g_old_kbd_mode, sizeof(struct termios));
@@ -52,7 +57,7 @@ int main( void ){
   unsigned index = 0;
   char text[255];
   trie_t *t = trie_init();
-  trie_load(t, "haltes2.txt");
+  trie_load(t, argv[1]);
 
  
   while (!kbhit() && len < 255){
@@ -61,9 +66,15 @@ int main( void ){
 
     if (ch == 26 || ch == 10 || ch == 27) {
         index = trie_complete(t, text);
-        printf("\nResult: %d\n", index);
-        printf("\n");
-        exit(1);
+        //printf("\nResult: %d\n", index);
+        //printf("\n");
+
+        // For now ugly
+        FILE *fd = fopen("/tmp/stopid", "w");
+        fprintf(fd, "%d", index);
+        fclose(fd);
+
+        exit(0);
     } else if (ch == 8 || ch == 127) {
         if (len > 0) { 
             ch = 8;
